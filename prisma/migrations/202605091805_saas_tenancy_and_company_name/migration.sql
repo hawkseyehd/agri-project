@@ -1,0 +1,79 @@
+DO $$
+BEGIN
+  ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'SUPER_ADMIN';
+  ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'LAND_OWNER';
+  ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'PENDING_USER';
+  ALTER TYPE "Role" ADD VALUE IF NOT EXISTS 'TENANT_USER';
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'PackageTier') THEN
+    CREATE TYPE "PackageTier" AS ENUM ('NONE', 'SILVER', 'GOLD', 'PLATINUM');
+  END IF;
+END $$;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'PermissionPage') THEN
+    CREATE TYPE "PermissionPage" AS ENUM (
+      'DASHBOARD',
+      'FARMS',
+      'LAND_BLOCKS',
+      'CROP_SEASONS',
+      'DAILY_REPORTS',
+      'LABOR',
+      'EXPENSES',
+      'INVENTORY',
+      'HARVEST_SALES',
+      'REPORTS',
+      'SETTINGS'
+    );
+  END IF;
+END $$;
+
+ALTER TABLE "User"
+ADD COLUMN IF NOT EXISTS "companyName" TEXT,
+ADD COLUMN IF NOT EXISTS "packageTier" "PackageTier" NOT NULL DEFAULT 'NONE',
+ADD COLUMN IF NOT EXISTS "subscriptionApprovedAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "subscriptionExpiresAt" TIMESTAMP(3),
+ADD COLUMN IF NOT EXISTS "ownerId" TEXT;
+
+ALTER TABLE "Farm"
+ADD COLUMN IF NOT EXISTS "ownerId" TEXT;
+
+CREATE TABLE IF NOT EXISTS "UserPagePermission" (
+  "id" TEXT NOT NULL,
+  "userId" TEXT NOT NULL,
+  "page" "PermissionPage" NOT NULL,
+  "canView" BOOLEAN NOT NULL DEFAULT false,
+  "canCreate" BOOLEAN NOT NULL DEFAULT false,
+  "canEdit" BOOLEAN NOT NULL DEFAULT false,
+  "canDelete" BOOLEAN NOT NULL DEFAULT false,
+  "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3) NOT NULL,
+  CONSTRAINT "UserPagePermission_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "UserPagePermission_userId_page_key" ON "UserPagePermission"("userId", "page");
+
+DO $$
+BEGIN
+  ALTER TABLE "User" ADD CONSTRAINT "User_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  ALTER TABLE "Farm" ADD CONSTRAINT "Farm_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$
+BEGIN
+  ALTER TABLE "UserPagePermission" ADD CONSTRAINT "UserPagePermission_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;

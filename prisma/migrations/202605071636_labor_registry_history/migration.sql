@@ -1,0 +1,38 @@
+CREATE TYPE "LaborEntityKind" AS ENUM ('INDIVIDUAL', 'TEAM');
+
+CREATE TYPE "LaborEmploymentType" AS ENUM ('SALARY', 'DAILY_WAGE', 'TEMPORARY');
+
+CREATE TYPE "LaborCostUnit" AS ENUM ('DAILY_WAGE', 'MONTHLY_SALARY', 'PER_ACRE');
+
+CREATE TYPE "LaborActivityType" AS ENUM ('FIELD_LABOUR', 'IRRIGATION', 'PLANTING', 'HARVESTING', 'LEAF_CUTTING', 'LAND_WORK', 'GUD', 'DARR', 'DARESHI', 'TRACTOR_WORK', 'SPRAYING', 'FERTILIZER_APPLICATION', 'WEEDING', 'PRUNING', 'LOADING', 'OTHER');
+
+ALTER TABLE "Worker"
+ADD COLUMN "entityKind" "LaborEntityKind" NOT NULL DEFAULT 'INDIVIDUAL',
+ADD COLUMN "employmentType" "LaborEmploymentType" NOT NULL DEFAULT 'SALARY',
+ADD COLUMN "activityType" "LaborActivityType" NOT NULL DEFAULT 'FIELD_LABOUR',
+ADD COLUMN "costUnit" "LaborCostUnit" NOT NULL DEFAULT 'DAILY_WAGE',
+ADD COLUMN "salaryAmount" DECIMAL(65,30),
+ADD COLUMN "perAcreRate" DECIMAL(65,30),
+ADD COLUMN "teamSize" INTEGER,
+ADD COLUMN "startDate" TIMESTAMP(3),
+ADD COLUMN "endDate" TIMESTAMP(3),
+ADD COLUMN "archivedAt" TIMESTAMP(3),
+ADD COLUMN "archiveReason" TEXT;
+
+CREATE TABLE "LaborHistory" (
+    "id" TEXT NOT NULL,
+    "farmId" TEXT NOT NULL,
+    "workerId" TEXT,
+    "archivedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "archiveReason" TEXT NOT NULL,
+    "snapshot" JSONB NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "LaborHistory_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX "LaborHistory_farmId_archivedAt_idx" ON "LaborHistory"("farmId", "archivedAt");
+
+ALTER TABLE "LaborHistory" ADD CONSTRAINT "LaborHistory_farmId_fkey" FOREIGN KEY ("farmId") REFERENCES "Farm"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+ALTER TABLE "LaborHistory" ADD CONSTRAINT "LaborHistory_workerId_fkey" FOREIGN KEY ("workerId") REFERENCES "Worker"("id") ON DELETE SET NULL ON UPDATE CASCADE;

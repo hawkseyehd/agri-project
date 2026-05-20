@@ -1,0 +1,456 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  LAND_OWNER
+  PENDING_USER
+  TENANT_USER
+  OWNER
+  ADMIN
+  MANAGER
+}
+
+enum PackageTier {
+  NONE
+  SILVER
+  GOLD
+  PLATINUM
+}
+
+enum PermissionPage {
+  DASHBOARD
+  FARMS
+  LAND_BLOCKS
+  CROP_SEASONS
+  DAILY_REPORTS
+  LABOR
+  EXPENSES
+  INVENTORY
+  HARVEST_SALES
+  REPORTS
+  SETTINGS
+}
+
+enum CropSeasonStatus {
+  PLANNED
+  ACTIVE
+  HARVESTED
+  CLOSED
+}
+
+enum CropType {
+  CROP
+  TREE
+  PLANTAIN
+  RATOON
+}
+
+enum DailyReportStatus {
+  DRAFT
+  SUBMITTED
+}
+
+enum PaymentStatus {
+  PENDING
+  PARTIAL
+  PAID
+}
+
+enum InventoryMovementType {
+  PURCHASE
+  USAGE
+  ADJUSTMENT
+  WASTAGE
+}
+
+enum WorkerStatus {
+  ACTIVE
+  INACTIVE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  HALF_DAY
+  PAID_LEAVE
+}
+
+enum LaborEntityKind {
+  INDIVIDUAL
+  TEAM
+}
+
+enum LaborEmploymentType {
+  SALARY
+  DAILY_WAGE
+  TEMPORARY
+}
+
+enum LaborCostUnit {
+  DAILY_WAGE
+  MONTHLY_SALARY
+  PER_ACRE
+}
+
+enum LaborActivityType {
+  FIELD_LABOUR
+  IRRIGATION
+  PLANTING
+  HARVESTING
+  LEAF_CUTTING
+  LAND_WORK
+  GUD
+  DARR
+  DARESHI
+  TRACTOR_WORK
+  SPRAYING
+  FERTILIZER_APPLICATION
+  WEEDING
+  PRUNING
+  LOADING
+  OTHER
+}
+
+enum NotificationType {
+  INFO
+  WARNING
+  SUCCESS
+}
+
+enum Unit {
+  ACRE
+  BAG
+  KG
+  LITER
+  MAUND
+  PIECE
+}
+
+enum FarmType {
+  OWNER
+  CONTRACTOR
+  LEASE
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  companyName String?
+  email     String   @unique
+  password  String
+  role      Role     @default(PENDING_USER)
+  packageTier PackageTier @default(NONE)
+  subscriptionApprovedAt DateTime?
+  subscriptionExpiresAt DateTime?
+  ownerId   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner       User?   @relation("TenantUsers", fields: [ownerId], references: [id], onDelete: SetNull)
+  tenantUsers User[]  @relation("TenantUsers")
+  ownedFarms  Farm[]  @relation("FarmOwner")
+  pagePermissions UserPagePermission[]
+  assignments FarmManager[]
+  reports     DailyReport[]
+  activityLogs ActivityLog[]
+  notifications Notification[]
+}
+
+model UserPagePermission {
+  id        String @id @default(cuid())
+  userId    String
+  page      PermissionPage
+  canView   Boolean @default(false)
+  canCreate Boolean @default(false)
+  canEdit   Boolean @default(false)
+  canDelete Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, page])
+}
+
+model Farm {
+  id        String   @id @default(cuid())
+  ownerId   String?
+  name      String
+  location  String?
+  address   String   @default("")
+  area      Decimal  @default(0)
+  type      FarmType @default(OWNER)
+  farmCode  String?
+  village   String?
+  city      String?
+  district  String?
+  region    String?
+  country   String?
+  gpsCoordinates String?
+  registrationNumber String?
+  landRecordNumber String?
+  leaseStartDate DateTime?
+  leaseEndDate DateTime?
+  contactPerson String?
+  contactPhone String?
+  description String?
+  soilType String?
+  soilPh Decimal?
+  organicMatterLevel String?
+  salinityIssue String?
+  lastSoilTestDate DateTime?
+  fertilityNotes String?
+  knownProblems String?
+  irrigationMethod String?
+  waterSource String?
+  waterSourcesCount Int?
+  pumpType String?
+  waterAvailability String?
+  irrigationEnergySource String?
+  waterScheduleNotes String?
+  permanentWorkersCount Int?
+  seasonalWorkersCount Int?
+  defaultDailyWage Decimal?
+  inventoryNotes String?
+  equipmentNotes String?
+  openingBalance Decimal?
+  currency String?
+  seasonalBudget Decimal?
+  expenseCategories String?
+  documentsNotes String?
+  alertsNotes String?
+  managerNotes String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  owner    User? @relation("FarmOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+  managers FarmManager[]
+  blocks   LandBlock[]
+  expenses Expense[]
+  items    InventoryItem[]
+  workers  Worker[]
+  laborAttendance LaborAttendance[]
+  laborHistory LaborHistory[]
+  activityLogs ActivityLog[]
+  notifications Notification[]
+}
+
+model FarmManager {
+  id        String @id @default(cuid())
+  farmId    String
+  managerId String
+
+  farm    Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  manager User @relation(fields: [managerId], references: [id], onDelete: Cascade)
+
+  @@unique([farmId, managerId])
+}
+
+model LandBlock {
+  id        String   @id @default(cuid())
+  farmId    String
+  name      String
+  areaAcres Decimal?
+  createdAt DateTime @default(now())
+
+  farm    Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  seasons CropSeason[]
+}
+
+model CropSeason {
+  id          String           @id @default(cuid())
+  blockId     String
+  cropType    CropType         @default(CROP)
+  cropName    String
+  variety     String?
+  startDate   DateTime
+  endDate     DateTime?
+  harvestTiming String?
+  status      CropSeasonStatus @default(PLANNED)
+  createdAt   DateTime         @default(now())
+
+  block     LandBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
+  reports   DailyReport[]
+  harvests  Harvest[]
+  sales     Sale[]
+  expenses  Expense[]
+}
+
+model DailyReport {
+  id           String   @id @default(cuid())
+  cropSeasonId String
+  managerId    String
+  reportDate   DateTime
+  status       DailyReportStatus @default(DRAFT)
+  notes        String?
+  submittedAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  cropSeason CropSeason @relation(fields: [cropSeasonId], references: [id], onDelete: Cascade)
+  manager    User       @relation(fields: [managerId], references: [id])
+  laborAttendance LaborAttendance[]
+  inventoryMovements InventoryMovement[]
+
+  @@unique([cropSeasonId, managerId, reportDate])
+}
+
+model Expense {
+  id           String   @id @default(cuid())
+  farmId       String
+  cropSeasonId String?
+  category     String
+  amount       Decimal
+  paymentStatus String  @default("PENDING")
+  receiptPath  String?
+  expenseDate  DateTime
+  createdAt    DateTime @default(now())
+
+  farm       Farm        @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  cropSeason CropSeason? @relation(fields: [cropSeasonId], references: [id])
+}
+
+model InventoryItem {
+  id            String   @id @default(cuid())
+  farmId        String
+  name          String
+  itemType      String   @default("General")
+  unit          String
+  quantity      Decimal  @default(0)
+  lowStockLevel Decimal  @default(0)
+  createdAt     DateTime @default(now())
+
+  farm      Farm                @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  movements InventoryMovement[]
+}
+
+model InventoryMovement {
+  id        String   @id @default(cuid())
+  itemId    String
+  dailyReportId String?
+  type      InventoryMovementType
+  quantity  Decimal
+  notes     String?
+  createdAt DateTime @default(now())
+
+  item InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  dailyReport DailyReport? @relation(fields: [dailyReportId], references: [id], onDelete: SetNull)
+}
+
+model Harvest {
+  id           String   @id @default(cuid())
+  cropSeasonId String
+  quantity     Decimal
+  unit         String
+  harvestDate  DateTime
+  notes        String?
+
+  cropSeason CropSeason @relation(fields: [cropSeasonId], references: [id], onDelete: Cascade)
+  sales      Sale[]
+}
+
+model Sale {
+  id           String   @id @default(cuid())
+  cropSeasonId String
+  harvestId    String?
+  buyerName    String
+  quantity     Decimal
+  unitPrice    Decimal
+  saleDate     DateTime
+  received     Decimal  @default(0)
+
+  cropSeason CropSeason @relation(fields: [cropSeasonId], references: [id], onDelete: Cascade)
+  harvest    Harvest?   @relation(fields: [harvestId], references: [id])
+}
+
+model Worker {
+  id        String   @id @default(cuid())
+  farmId    String
+  name      String
+  workerType String
+  phone     String?
+  entityKind LaborEntityKind @default(INDIVIDUAL)
+  employmentType LaborEmploymentType @default(SALARY)
+  activityType LaborActivityType @default(FIELD_LABOUR)
+  costUnit LaborCostUnit @default(DAILY_WAGE)
+  dailyWage Decimal  @default(0)
+  salaryAmount Decimal?
+  perAcreRate Decimal?
+  teamSize Int?
+  startDate DateTime?
+  endDate DateTime?
+  status    WorkerStatus @default(ACTIVE)
+  archivedAt DateTime?
+  archiveReason String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  farm Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  attendance LaborAttendance[]
+  history LaborHistory[]
+}
+
+model LaborAttendance {
+  id        String   @id @default(cuid())
+  farmId    String
+  workerId  String
+  dailyReportId String?
+  reportDate DateTime
+  status    AttendanceStatus @default(PRESENT)
+  wageAmount Decimal @default(0)
+  paidAmount Decimal @default(0)
+  notes     String?
+  createdAt DateTime @default(now())
+
+  farm Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  worker Worker @relation(fields: [workerId], references: [id], onDelete: Cascade)
+  dailyReport DailyReport? @relation(fields: [dailyReportId], references: [id], onDelete: SetNull)
+}
+
+model LaborHistory {
+  id        String   @id @default(cuid())
+  farmId    String
+  workerId  String?
+  archivedAt DateTime @default(now())
+  archiveReason String
+  snapshot  Json
+  createdAt DateTime @default(now())
+
+  farm Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  worker Worker? @relation(fields: [workerId], references: [id], onDelete: SetNull)
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  farmId    String?
+  userId    String?
+  action    String
+  entityType String
+  entityId  String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+
+  farm Farm? @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  farmId    String?
+  userId    String?
+  type      NotificationType @default(INFO)
+  title     String
+  message   String
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  farm Farm? @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
