@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
-import { mkdir, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
 
-import { buildStoredUploadName, getUploadValidationError, resolveStoredUploadPath, uploadDir } from "@/lib/upload";
+import { getUploadValidationError } from "@/lib/upload";
 
 export async function POST(request: Request) {
   const formData = await request.formData();
@@ -21,40 +19,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: validationError }, { status: 400 });
   }
 
-  const bytes = Buffer.from(await file.arrayBuffer());
-  const storageRoot = path.join(process.cwd(), uploadDir);
-  const storedName = buildStoredUploadName(file.name, crypto.randomUUID());
-  const storedPath = path.join(storageRoot, storedName);
-
-  await mkdir(storageRoot, { recursive: true });
-  await writeFile(storedPath, bytes);
-
-  return NextResponse.json({
-    fileName: file.name,
-    path: `/uploads/${storedName}`,
-    size: file.size,
-    type: file.type
-  });
+  return NextResponse.json(
+    {
+      message: "File uploads need a persistent storage provider in production. Configure Vercel Blob, Supabase Storage, Cloudflare R2, or S3 before enabling uploads.",
+      fileName: file.name,
+      size: file.size,
+      type: file.type
+    },
+    { status: 501 }
+  );
 }
 
 export async function DELETE(request: Request) {
-  let publicPath = "";
+  await request.json().catch(() => undefined);
 
-  try {
-    const body = (await request.json()) as { path?: unknown };
-    publicPath = typeof body.path === "string" ? body.path : "";
-  } catch {
-    return NextResponse.json({ message: "Upload path is required." }, { status: 400 });
-  }
-
-  try {
-    const fileName = resolveStoredUploadPath(publicPath);
-    const storedPath = path.join(process.cwd(), uploadDir, fileName);
-
-    await unlink(storedPath);
-
-    return NextResponse.json({ ok: true });
-  } catch (error) {
-    return NextResponse.json({ message: error instanceof Error ? error.message : "File could not be deleted." }, { status: 400 });
-  }
+  return NextResponse.json(
+    {
+      message: "File deletion needs a persistent storage provider in production. Configure Vercel Blob, Supabase Storage, Cloudflare R2, or S3 before enabling uploads."
+    },
+    { status: 501 }
+  );
 }
