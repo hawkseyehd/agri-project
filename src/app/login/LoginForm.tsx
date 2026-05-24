@@ -2,7 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 
 import { toCurrentOrigin } from "@/lib/auth-redirect";
 
@@ -12,13 +12,20 @@ export function LoginForm() {
   const [error, setError] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const formData = new FormData(event.currentTarget);
+
     setIsPending(true);
     setError(null);
 
+    const email = String(formData.get("email") ?? "");
+    const password = String(formData.get("password") ?? "");
+
     const result = await signIn("credentials", {
-      email: formData.get("email"),
-      password: formData.get("password"),
+      email,
+      password,
       callbackUrl,
       redirect: false
     });
@@ -34,7 +41,7 @@ export function LoginForm() {
   }
 
   return (
-    <form action={handleSubmit} className="mt-5 space-y-4">
+    <form onSubmit={handleSubmit} className="mt-5 space-y-4">
       {error ? <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">{error}</div> : null}
 
       <label className="block text-sm font-medium text-slate-700">
