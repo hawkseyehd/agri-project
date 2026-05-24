@@ -1,29 +1,16 @@
-﻿.env
+.env
 .env.*
 !.env.example
 
-node_modules
-.pnpm-store
-.next
-.vercel
-.git
-
 *.log
-*.tsbuildinfo
 *.db
 *.sqlite
 *.sqlite3
 *.sqlite-journal
-*.tmp
 
 Plan
-docs/**/*.docx
-public/uploads/*
-!public/uploads/.gitkeep
-
+docs
+tests
 coverage
 playwright-report
 test-results
-tmp
-dist
-build
