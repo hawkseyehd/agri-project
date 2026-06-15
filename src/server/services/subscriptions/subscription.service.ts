@@ -10,6 +10,7 @@ export type OperationalCounts = {
   laborAttendance: number;
   workers: number;
   harvests: number;
+  yields: number;
   sales: number;
 };
 

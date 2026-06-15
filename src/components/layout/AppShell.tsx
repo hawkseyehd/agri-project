@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Bell,
   BellRing,
+  BarChart3,
   Boxes,
   Building2,
   ChevronDown,
@@ -37,6 +38,7 @@ const navigation = [
   { href: "/expenses", label: "Expenses", icon: Coins, page: "EXPENSES" },
   { href: "/inventory", label: "Inventory", icon: Boxes, page: "INVENTORY" },
   { href: "/harvest-sales", label: "Harvest & Sales", icon: TrendingUp, page: "HARVEST_SALES" },
+  { href: "/yields", label: "Yields", icon: BarChart3, page: "YIELDS" },
   { href: "/reports", label: "Reports", icon: Leaf, page: "REPORTS" },
   { href: "/notifications", label: "Notifications", icon: BellRing },
   { href: "/activity-logs", label: "Activity Logs", icon: ScrollText }
@@ -54,7 +56,8 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
           { href: "/super-admin", label: "SaaS Dashboard", icon: ShieldCheck },
           { href: "/super-admin/users", label: "Users", icon: UsersRound },
           { href: "/super-admin/farms", label: "Farms", icon: Tractor },
-          { href: "/super-admin/inventory", label: "Inventory", icon: Boxes }
+          { href: "/super-admin/inventory", label: "Inventory", icon: Boxes },
+          { href: "/super-admin/yields", label: "Yields", icon: BarChart3 }
         ]
       : [
           ...navigation.filter((item) => !item.page || (role && canUsePagePermission(role, pagePermissions, item.page, "view")))

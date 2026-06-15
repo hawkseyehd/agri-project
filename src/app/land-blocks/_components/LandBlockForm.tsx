@@ -2,6 +2,8 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 
+import { BoundaryDrawMap } from "@/components/maps/BoundaryDrawMap";
+
 type ActionState = {
   ok: boolean;
   message?: string;
@@ -20,6 +22,7 @@ type LandBlockFormProps = {
     farmId?: string;
     name?: string;
     areaAcres?: unknown;
+    boundaryGeoJson?: string | null;
   };
   submitLabel: string;
 };
@@ -67,6 +70,7 @@ export function LandBlockForm({ action, farms, defaultValues, submitLabel }: Lan
           Area acres
           <input
             type="number"
+            id="areaAcres"
             step="0.01"
             min="0"
             name="areaAcres"
@@ -76,6 +80,8 @@ export function LandBlockForm({ action, farms, defaultValues, submitLabel }: Lan
           {fieldError(state, "areaAcres") ? <span className="block text-xs text-red-600">{fieldError(state, "areaAcres")}</span> : null}
         </label>
       </div>
+
+      <BoundaryDrawMap fieldName="boundaryGeoJson" areaFieldId="areaAcres" defaultBoundary={defaultValues?.boundaryGeoJson} />
 
       <div className="flex justify-end">
         <SubmitButton label={submitLabel} />

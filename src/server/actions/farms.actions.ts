@@ -56,6 +56,7 @@ const farmFieldNames = [
   "region",
   "country",
   "gpsCoordinates",
+  "boundaryGeoJson",
   "registrationNumber",
   "landRecordNumber",
   "leaseStartDate",
@@ -122,7 +123,8 @@ export async function createFarmAction(_previousState: ActionState, formData: Fo
   const parsed = farmWithInitialBlockSchema.safeParse({
     ...farmPayload(formData),
     initialBlockName: formValue(formData, "initialBlockName"),
-    initialBlockAreaAcres: formValue(formData, "initialBlockAreaAcres")
+    initialBlockAreaAcres: formValue(formData, "initialBlockAreaAcres"),
+    initialBlockBoundaryGeoJson: formValue(formData, "initialBlockBoundaryGeoJson")
   });
 
   if (!parsed.success) {

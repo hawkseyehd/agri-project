@@ -27,7 +27,7 @@ type LandBlockUpdateDb = {
 };
 
 export async function createFarm(db: FarmCreateDb, input: FarmWithInitialBlockInput) {
-  const { initialBlockName, initialBlockAreaAcres, ...farmData } = input;
+  const { initialBlockName, initialBlockAreaAcres, initialBlockBoundaryGeoJson, ...farmData } = input;
 
   return db.farm.create({
     data: {
@@ -37,7 +37,8 @@ export async function createFarm(db: FarmCreateDb, input: FarmWithInitialBlockIn
             blocks: {
               create: {
                 name: initialBlockName,
-                areaAcres: initialBlockAreaAcres
+                areaAcres: initialBlockAreaAcres,
+                boundaryGeoJson: initialBlockBoundaryGeoJson
               }
             }
           }
@@ -60,7 +61,8 @@ export async function createLandBlock(db: LandBlockCreateDb, input: LandBlockInp
     data: {
       farmId: input.farmId,
       name: input.name,
-      areaAcres: input.areaAcres
+      areaAcres: input.areaAcres,
+      boundaryGeoJson: input.boundaryGeoJson
     }
   });
 }
@@ -73,7 +75,8 @@ export async function updateLandBlock(db: LandBlockUpdateDb, id: string, input: 
     data: {
       farmId: input.farmId,
       name: input.name,
-      areaAcres: input.areaAcres
+      areaAcres: input.areaAcres,
+      boundaryGeoJson: input.boundaryGeoJson
     }
   });
 }

@@ -50,7 +50,8 @@ export default async function EditLandBlockPage({ params }: PageProps) {
           defaultValues={{
             farmId: block.farmId,
             name: block.name,
-            areaAcres: block.areaAcres
+            areaAcres: block.areaAcres,
+            boundaryGeoJson: block.boundaryGeoJson ? JSON.stringify(block.boundaryGeoJson) : null
           }}
           submitLabel="Save block"
         />

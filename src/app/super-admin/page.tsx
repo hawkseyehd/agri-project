@@ -117,6 +117,7 @@ export default async function SuperAdminPage({ searchParams }: { searchParams?: 
             <Field label="Labor records" value={String(metrics.operationalCounts.laborAttendance)} />
             <Field label="Workers" value={String(metrics.operationalCounts.workers)} />
             <Field label="Harvests" value={String(metrics.operationalCounts.harvests)} />
+            <Field label="Yields" value={String(metrics.operationalCounts.yields)} />
             <Field label="Sales" value={String(metrics.operationalCounts.sales)} />
           </div>
         </Panel>

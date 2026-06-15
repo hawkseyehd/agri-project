@@ -83,7 +83,8 @@ export async function createLandBlockAction(_previousState: ActionState, formDat
   const parsed = landBlockSchema.safeParse({
     farmId: formValue(formData, "farmId"),
     name: formValue(formData, "name"),
-    areaAcres: formValue(formData, "areaAcres")
+    areaAcres: formValue(formData, "areaAcres"),
+    boundaryGeoJson: formValue(formData, "boundaryGeoJson")
   });
 
   if (!parsed.success) {
@@ -117,7 +118,8 @@ export async function updateLandBlockAction(id: string, _previousState: ActionSt
   const parsed = landBlockSchema.safeParse({
     farmId: formValue(formData, "farmId"),
     name: formValue(formData, "name"),
-    areaAcres: formValue(formData, "areaAcres")
+    areaAcres: formValue(formData, "areaAcres"),
+    boundaryGeoJson: formValue(formData, "boundaryGeoJson")
   });
 
   if (!parsed.success) {

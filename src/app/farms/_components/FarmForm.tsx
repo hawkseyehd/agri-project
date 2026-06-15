@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 
+import { BoundaryDrawMap } from "@/components/maps/BoundaryDrawMap";
+
 type ActionState = {
   ok: boolean;
   message?: string;
@@ -57,6 +59,7 @@ function TextInput({
       <input
         type={type}
         name={name}
+        id={name}
         defaultValue={defaultValue(defaultValues, name)}
         className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
         required={required}
@@ -113,6 +116,8 @@ export function FarmForm({ action, defaultValues, showInitialBlockFields = false
           <TextInput state={state} name="location" label="Location" defaultValues={defaultValues} />
         </div>
       </section>
+
+      <BoundaryDrawMap fieldName="boundaryGeoJson" areaFieldId="area" defaultBoundary={defaultValue(defaultValues, "boundaryGeoJson")} />
 
       <Section title="Place and land records">
         <div className="grid gap-4 md:grid-cols-2">
@@ -188,12 +193,20 @@ export function FarmForm({ action, defaultValues, showInitialBlockFields = false
 
             <label className="space-y-1 text-sm font-medium text-slate-700">
               Block area acres
-              <input type="number" step="0.01" min="0" name="initialBlockAreaAcres" className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
+              <input
+                id="initialBlockAreaAcres"
+                type="number"
+                step="0.01"
+                min="0"
+                name="initialBlockAreaAcres"
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
+              />
               {fieldError(state, "initialBlockAreaAcres") ? (
                 <span className="block text-xs text-red-600">{fieldError(state, "initialBlockAreaAcres")}</span>
               ) : null}
             </label>
           </div>
+          <BoundaryDrawMap fieldName="initialBlockBoundaryGeoJson" areaFieldId="initialBlockAreaAcres" />
         </Section>
       ) : null}
 

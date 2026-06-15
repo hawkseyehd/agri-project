@@ -36,6 +36,7 @@ function farmFormDefaults(farm: NonNullable<Awaited<ReturnType<typeof getFarmByI
     region: farm.region,
     country: farm.country,
     gpsCoordinates: farm.gpsCoordinates,
+    boundaryGeoJson: farm.boundaryGeoJson ? JSON.stringify(farm.boundaryGeoJson) : null,
     registrationNumber: farm.registrationNumber,
     landRecordNumber: farm.landRecordNumber,
     leaseStartDate: formDate(farm.leaseStartDate),

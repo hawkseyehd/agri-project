@@ -44,9 +44,23 @@ async function assertCropSeasonAccess(cropSeasonId: string, action: "create" | "
       id: cropSeasonId
     },
     select: {
+      id: true,
+      cropName: true,
       block: {
         select: {
-          farmId: true
+          id: true,
+          farmId: true,
+          farm: {
+            select: {
+              id: true,
+              ownerId: true,
+              name: true,
+              city: true,
+              district: true,
+              region: true,
+              country: true
+            }
+          }
         }
       }
     }
@@ -63,6 +77,8 @@ async function assertCropSeasonAccess(cropSeasonId: string, action: "create" | "
   if (sessionUser) {
     assertCanUsePageAction(sessionUser, "HARVEST_SALES", action);
   }
+
+  return season;
 }
 
 export async function createHarvestAction(_previousState: ActionState, formData: FormData): Promise<ActionState> {
@@ -83,19 +99,43 @@ export async function createHarvestAction(_previousState: ActionState, formData:
   }
 
   try {
-    await assertCropSeasonAccess(parsed.data.cropSeasonId, "create");
+    const season = await assertCropSeasonAccess(parsed.data.cropSeasonId, "create");
 
-    await prisma.harvest.create({
-      data: {
-        cropSeasonId: parsed.data.cropSeasonId,
-        quantity: parsed.data.quantity,
-        unit: parsed.data.unit,
-        harvestDate: new Date(parsed.data.harvestDate),
-        notes: parsed.data.notes
-      }
+    await prisma.$transaction(async (tx) => {
+      const harvest = await tx.harvest.create({
+        data: {
+          cropSeasonId: parsed.data.cropSeasonId,
+          quantity: parsed.data.quantity,
+          unit: parsed.data.unit,
+          harvestDate: new Date(parsed.data.harvestDate),
+          notes: parsed.data.notes
+        }
+      });
+
+      await tx.yieldRecord.create({
+        data: {
+          farmId: season.block.farm.id,
+          landBlockId: season.block.id,
+          cropSeasonId: season.id,
+          harvestId: harvest.id,
+          ownerId: season.block.farm.ownerId,
+          cropName: season.cropName,
+          quantity: parsed.data.quantity,
+          unit: parsed.data.unit,
+          yieldDate: new Date(parsed.data.harvestDate),
+          farmName: season.block.farm.name,
+          city: season.block.farm.city,
+          district: season.block.farm.district,
+          region: season.block.farm.region,
+          country: season.block.farm.country,
+          notes: parsed.data.notes
+        }
+      });
     });
 
     revalidatePath("/harvest-sales");
+    revalidatePath("/yields");
+    revalidatePath("/super-admin/yields");
     revalidatePath("/dashboard");
 
     return {
@@ -128,22 +168,65 @@ export async function updateHarvestAction(id: string, _previousState: ActionStat
   }
 
   try {
-    await assertCropSeasonAccess(parsed.data.cropSeasonId, "edit");
+    const season = await assertCropSeasonAccess(parsed.data.cropSeasonId, "edit");
 
-    await prisma.harvest.update({
-      where: {
-        id
-      },
-      data: {
-        cropSeasonId: parsed.data.cropSeasonId,
-        quantity: parsed.data.quantity,
-        unit: parsed.data.unit,
-        harvestDate: new Date(parsed.data.harvestDate),
-        notes: parsed.data.notes
-      }
+    await prisma.$transaction(async (tx) => {
+      await tx.harvest.update({
+        where: {
+          id
+        },
+        data: {
+          cropSeasonId: parsed.data.cropSeasonId,
+          quantity: parsed.data.quantity,
+          unit: parsed.data.unit,
+          harvestDate: new Date(parsed.data.harvestDate),
+          notes: parsed.data.notes
+        }
+      });
+
+      await tx.yieldRecord.upsert({
+        where: {
+          harvestId: id
+        },
+        update: {
+          farmId: season.block.farm.id,
+          landBlockId: season.block.id,
+          cropSeasonId: season.id,
+          ownerId: season.block.farm.ownerId,
+          cropName: season.cropName,
+          quantity: parsed.data.quantity,
+          unit: parsed.data.unit,
+          yieldDate: new Date(parsed.data.harvestDate),
+          farmName: season.block.farm.name,
+          city: season.block.farm.city,
+          district: season.block.farm.district,
+          region: season.block.farm.region,
+          country: season.block.farm.country,
+          notes: parsed.data.notes
+        },
+        create: {
+          farmId: season.block.farm.id,
+          landBlockId: season.block.id,
+          cropSeasonId: season.id,
+          harvestId: id,
+          ownerId: season.block.farm.ownerId,
+          cropName: season.cropName,
+          quantity: parsed.data.quantity,
+          unit: parsed.data.unit,
+          yieldDate: new Date(parsed.data.harvestDate),
+          farmName: season.block.farm.name,
+          city: season.block.farm.city,
+          district: season.block.farm.district,
+          region: season.block.farm.region,
+          country: season.block.farm.country,
+          notes: parsed.data.notes
+        }
+      });
     });
 
     revalidatePath("/harvest-sales");
+    revalidatePath("/yields");
+    revalidatePath("/super-admin/yields");
     revalidatePath("/dashboard");
 
     return {

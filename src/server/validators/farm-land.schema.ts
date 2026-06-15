@@ -40,6 +40,27 @@ const optionalDate = z
   .transform((value) => (value ? new Date(value) : undefined))
   .refine((value) => value === undefined || !Number.isNaN(value.getTime()), "Date must be valid.");
 
+const optionalBoundaryGeoJson = z
+  .string()
+  .trim()
+  .optional()
+  .transform((value, context) => {
+    if (!value) {
+      return undefined;
+    }
+
+    try {
+      return JSON.parse(value);
+    } catch {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Map boundary must be valid GeoJSON."
+      });
+      return z.NEVER;
+    }
+  })
+  .refine((value) => value === undefined || (value?.type === "Feature" && value.geometry?.type === "Polygon"), "Map boundary must be a polygon.");
+
 export const farmSchema = z.object({
   name: z.string().trim().min(2, "Farm name must be at least 2 characters."),
   address: z.string().trim().min(1, "Address is required."),
@@ -53,6 +74,7 @@ export const farmSchema = z.object({
   region: optionalText,
   country: optionalText,
   gpsCoordinates: optionalText,
+  boundaryGeoJson: optionalBoundaryGeoJson,
   registrationNumber: optionalText,
   landRecordNumber: optionalText,
   leaseStartDate: optionalDate,
@@ -101,7 +123,8 @@ export const farmWithInitialBlockSchema = farmSchema
       .optional()
       .transform((value) => (value ? Number(value) : undefined))
       .refine((value) => value === undefined || !Number.isNaN(value), "Block area must be a number.")
-      .refine((value) => value === undefined || value >= 0, "Block area cannot be negative.")
+      .refine((value) => value === undefined || value >= 0, "Block area cannot be negative."),
+    initialBlockBoundaryGeoJson: optionalBoundaryGeoJson
   })
   .superRefine((value, context) => {
     if (value.initialBlockAreaAcres !== undefined && !value.initialBlockName) {
@@ -122,7 +145,8 @@ export const landBlockSchema = z.object({
     .optional()
     .transform((value) => (value ? Number(value) : undefined))
     .refine((value) => value === undefined || !Number.isNaN(value), "Area must be a number.")
-    .refine((value) => value === undefined || value >= 0, "Area cannot be negative.")
+    .refine((value) => value === undefined || value >= 0, "Area cannot be negative."),
+  boundaryGeoJson: optionalBoundaryGeoJson
 });
 
 export type FarmInput = z.infer<typeof farmSchema>;

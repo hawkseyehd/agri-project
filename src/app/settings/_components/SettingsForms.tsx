@@ -23,6 +23,7 @@ const permissionPages = [
   { key: "EXPENSES", label: "Expenses" },
   { key: "INVENTORY", label: "Inventory" },
   { key: "HARVEST_SALES", label: "Harvest & Sales" },
+  { key: "YIELDS", label: "Yields" },
   { key: "REPORTS", label: "Reports" },
   { key: "SETTINGS", label: "Settings" }
 ] as const;

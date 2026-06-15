@@ -40,6 +40,7 @@ describe("subscription service", () => {
         laborAttendance: 3,
         workers: 8,
         harvests: 2,
+        yields: 2,
         sales: 1
       }
     });
@@ -57,6 +58,6 @@ describe("subscription service", () => {
     expect(metrics.usersWithoutFarms).toBe(2);
     expect(metrics.totalFarms).toBe(3);
     expect(metrics.operationalCounts.reports).toBe(9);
-    expect(metrics.operationalTotal).toBe(57);
+    expect(metrics.operationalTotal).toBe(59);
   });
 });

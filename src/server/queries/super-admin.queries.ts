@@ -36,6 +36,7 @@ export async function getSuperAdminDashboardData(range: SuperAdminDateRange = {}
     laborAttendance,
     workers,
     harvests,
+    yields,
     sales
   ] = await Promise.all([
     prisma.user.findMany({
@@ -100,6 +101,11 @@ export async function getSuperAdminDashboardData(range: SuperAdminDateRange = {}
         ...(dateWhere(range) ? { harvestDate: dateWhere(range) } : {})
       }
     }),
+    prisma.yieldRecord.count({
+      where: {
+        ...(dateWhere(range) ? { yieldDate: dateWhere(range) } : {})
+      }
+    }),
     prisma.sale.count({
       where: {
         ...(dateWhere(range) ? { saleDate: dateWhere(range) } : {})
@@ -120,6 +126,7 @@ export async function getSuperAdminDashboardData(range: SuperAdminDateRange = {}
       laborAttendance,
       workers,
       harvests,
+      yields,
       sales
     }
   });

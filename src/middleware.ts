@@ -11,6 +11,7 @@ const pageByPath: Array<[RegExp, string]> = [
   [/^\/expenses(?:\/|$)/, "EXPENSES"],
   [/^\/inventory(?:\/|$)/, "INVENTORY"],
   [/^\/harvest-sales(?:\/|$)/, "HARVEST_SALES"],
+  [/^\/yields(?:\/|$)/, "YIELDS"],
   [/^\/reports(?:\/|$)/, "REPORTS"]
 ];
 
@@ -75,6 +76,7 @@ export const config = {
     "/expenses/:path*",
     "/inventory/:path*",
     "/harvest-sales/:path*",
+    "/yields/:path*",
     "/reports/:path*",
     "/settings/:path*",
     "/super-admin/:path*"

@@ -34,6 +34,7 @@ enum PermissionPage {
   EXPENSES
   INVENTORY
   HARVEST_SALES
+  YIELDS
   REPORTS
   SETTINGS
 }
@@ -161,6 +162,7 @@ model User {
   reports     DailyReport[]
   activityLogs ActivityLog[]
   notifications Notification[]
+  yieldRecords YieldRecord[] @relation("YieldOwner")
 }
 
 model UserPagePermission {
@@ -194,6 +196,7 @@ model Farm {
   region    String?
   country   String?
   gpsCoordinates String?
+  boundaryGeoJson Json?
   registrationNumber String?
   landRecordNumber String?
   leaseStartDate DateTime?
@@ -240,6 +243,7 @@ model Farm {
   laborHistory LaborHistory[]
   activityLogs ActivityLog[]
   notifications Notification[]
+  yieldRecords YieldRecord[]
 }
 
 model FarmManager {
@@ -258,10 +262,12 @@ model LandBlock {
   farmId    String
   name      String
   areaAcres Decimal?
+  boundaryGeoJson Json?
   createdAt DateTime @default(now())
 
   farm    Farm @relation(fields: [farmId], references: [id], onDelete: Cascade)
   seasons CropSeason[]
+  yieldRecords YieldRecord[]
 }
 
 model CropSeason {
@@ -281,6 +287,7 @@ model CropSeason {
   harvests  Harvest[]
   sales     Sale[]
   expenses  Expense[]
+  yieldRecords YieldRecord[]
 }
 
 model DailyReport {
@@ -354,6 +361,38 @@ model Harvest {
 
   cropSeason CropSeason @relation(fields: [cropSeasonId], references: [id], onDelete: Cascade)
   sales      Sale[]
+  yieldRecord YieldRecord?
+}
+
+model YieldRecord {
+  id           String   @id @default(cuid())
+  farmId       String
+  landBlockId  String
+  cropSeasonId String
+  harvestId    String?  @unique
+  ownerId      String?
+  cropName     String
+  quantity     Decimal
+  unit         String
+  yieldDate    DateTime
+  farmName     String
+  city         String?
+  district     String?
+  region       String?
+  country      String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  farm       Farm       @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  landBlock  LandBlock  @relation(fields: [landBlockId], references: [id], onDelete: Cascade)
+  cropSeason CropSeason @relation(fields: [cropSeasonId], references: [id], onDelete: Cascade)
+  harvest    Harvest?   @relation(fields: [harvestId], references: [id], onDelete: SetNull)
+  owner      User?      @relation("YieldOwner", fields: [ownerId], references: [id], onDelete: SetNull)
+
+  @@index([cropName, district, yieldDate])
+  @@index([farmId, yieldDate])
+  @@index([ownerId, yieldDate])
 }
 
 model Sale {
