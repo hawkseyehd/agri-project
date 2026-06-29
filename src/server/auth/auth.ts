@@ -13,6 +13,8 @@ export function shouldRefreshAuthToken(lastRefreshedAt: number | undefined, now 
   return lastRefreshedAt === undefined || now - lastRefreshedAt >= authRefreshIntervalMs;
 }
 
+const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+
 export type AuthenticatedUser = {
   id: string;
   name?: string | null;
@@ -34,6 +36,7 @@ export type AuthenticatedUser = {
 };
 
 export const authOptions: NextAuthOptions = {
+  secret: authSecret,
   providers: [
     Credentials({
       credentials: {
