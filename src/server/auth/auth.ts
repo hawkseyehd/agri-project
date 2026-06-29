@@ -5,15 +5,18 @@ import type { NextAuthOptions } from "next-auth";
 import { getServerSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
-import { prisma } from "@/server/db/prisma";
-
 const authRefreshIntervalMs = 60_000;
 
 export function shouldRefreshAuthToken(lastRefreshedAt: number | undefined, now = Date.now()) {
   return lastRefreshedAt === undefined || now - lastRefreshedAt >= authRefreshIntervalMs;
 }
 
-const authSecret = process.env.NEXTAUTH_SECRET ?? process.env.AUTH_SECRET;
+const authSecret = process.env.NEXTAUTH_SECRET?.trim() || process.env.AUTH_SECRET?.trim();
+
+async function getPrisma() {
+  const { prisma } = await import("@/server/db/prisma");
+  return prisma;
+}
 
 export type AuthenticatedUser = {
   id: string;
@@ -51,6 +54,7 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const prisma = await getPrisma();
         const user = await prisma.user.findUnique({
           where: {
             email
@@ -115,6 +119,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       if (!user && token.id && shouldRefreshAuthToken(token.userRefreshedAt)) {
+        const prisma = await getPrisma();
         const currentUser = await prisma.user.findUnique({
           where: {
             id: token.id
