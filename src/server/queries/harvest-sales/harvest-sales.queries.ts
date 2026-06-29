@@ -42,7 +42,10 @@ function accessibleCropSeasonFilter(context: HarvestSalesAccessContext) {
 export async function getHarvestSalesPageData(context: HarvestSalesAccessContext) {
   const [cropSeasons, harvests, sales] = await Promise.all([
     prisma.cropSeason.findMany({
-      where: accessibleCropSeasonFilter(context),
+      where: {
+        archivedAt: null,
+        ...accessibleCropSeasonFilter(context)
+      },
       include: {
         block: {
           include: {
@@ -53,7 +56,10 @@ export async function getHarvestSalesPageData(context: HarvestSalesAccessContext
       orderBy: [{ status: "asc" }, { startDate: "desc" }]
     }),
     prisma.harvest.findMany({
-      where: cropSeasonAccessFilter(context),
+      where: {
+        archivedAt: null,
+        ...cropSeasonAccessFilter(context)
+      },
       include: {
         cropSeason: {
           include: {
@@ -70,7 +76,10 @@ export async function getHarvestSalesPageData(context: HarvestSalesAccessContext
       }
     }),
     prisma.sale.findMany({
-      where: cropSeasonAccessFilter(context),
+      where: {
+        archivedAt: null,
+        ...cropSeasonAccessFilter(context)
+      },
       include: {
         cropSeason: {
           include: {

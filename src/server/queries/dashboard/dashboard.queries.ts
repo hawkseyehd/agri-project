@@ -70,6 +70,7 @@ export async function getDashboardPageData(context: DashboardAccessContext) {
   const [activeCropSeasons, submittedDailyReports, expenses, sales, lowStockItems, recentReports] = await Promise.all([
     prisma.cropSeason.findMany({
       where: {
+        archivedAt: null,
         status: "ACTIVE",
         ...farmScopedFilter(context)
       },
@@ -103,6 +104,7 @@ export async function getDashboardPageData(context: DashboardAccessContext) {
     }),
     prisma.sale.findMany({
       where: {
+        archivedAt: null,
         cropSeason: farmScopedFilter(context)
       },
       select: {

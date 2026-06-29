@@ -61,15 +61,18 @@ export async function getYieldPageData(context: YieldAccessContext, filters: Yie
       }
     }),
     prisma.cropSeason.findMany({
-      where: canAccessAllFarms(context.role)
-        ? {}
-        : {
-            block: {
-              farmId: {
-                in: context.assignedFarmIds
+      where: {
+        archivedAt: null,
+        ...(canAccessAllFarms(context.role)
+          ? {}
+          : {
+              block: {
+                farmId: {
+                  in: context.assignedFarmIds
+                }
               }
-            }
-          },
+            })
+      },
       include: {
         block: {
           include: {

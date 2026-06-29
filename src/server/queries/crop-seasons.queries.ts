@@ -24,14 +24,19 @@ function farmAccessFilter(context: AccessContext) {
 
 export async function getCropSeasons(context: AccessContext) {
   return prisma.cropSeason.findMany({
-    where: farmAccessFilter(context),
+    where: {
+      archivedAt: null,
+      ...farmAccessFilter(context)
+    },
     include: {
       block: {
         include: {
           farm: true
         }
       },
-      harvests: true,
+      harvests: {
+        where: { archivedAt: null }
+      },
       expenses: true
     },
     orderBy: [{ status: "asc" }, { startDate: "desc" }]
@@ -42,6 +47,7 @@ export async function getCropSeasonById(id: string, context: AccessContext) {
   return prisma.cropSeason.findFirst({
     where: {
       id,
+      archivedAt: null,
       ...farmAccessFilter(context)
     },
     include: {
@@ -56,11 +62,13 @@ export async function getCropSeasonById(id: string, context: AccessContext) {
         }
       },
       harvests: {
+        where: { archivedAt: null },
         orderBy: {
           harvestDate: "desc"
         }
       },
       sales: {
+        where: { archivedAt: null },
         orderBy: {
           saleDate: "desc"
         }

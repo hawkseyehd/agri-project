@@ -47,5 +47,6 @@ declare module "next-auth/jwt" {
     subscriptionExpiresAt?: string | null;
     pagePermissions?: SessionPagePermission[];
     assignedFarmIds?: string[];
+    userRefreshedAt?: number;
   }
 }

@@ -52,6 +52,10 @@ export default withAuth(
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
+    if (pathname.startsWith("/yields") && role !== "SUPER_ADMIN") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
     if (!canViewPage(role, req.nextauth.token?.pagePermissions, pathname)) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }

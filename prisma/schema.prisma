@@ -281,6 +281,7 @@ model CropSeason {
   harvestTiming String?
   status      CropSeasonStatus @default(PLANNED)
   createdAt   DateTime         @default(now())
+  archivedAt  DateTime?
 
   block     LandBlock @relation(fields: [blockId], references: [id], onDelete: Cascade)
   reports   DailyReport[]
@@ -288,6 +289,8 @@ model CropSeason {
   sales     Sale[]
   expenses  Expense[]
   yieldRecords YieldRecord[]
+
+  @@index([archivedAt])
 }
 
 model DailyReport {
@@ -358,10 +361,13 @@ model Harvest {
   unit         String
   harvestDate  DateTime
   notes        String?
+  archivedAt   DateTime?
 
   cropSeason CropSeason @relation(fields: [cropSeasonId], references: [id], onDelete: Cascade)
   sales      Sale[]
   yieldRecord YieldRecord?
+
+  @@index([archivedAt])
 }
 
 model YieldRecord {
@@ -404,9 +410,12 @@ model Sale {
   unitPrice    Decimal
   saleDate     DateTime
   received     Decimal  @default(0)
+  archivedAt   DateTime?
 
   cropSeason CropSeason @relation(fields: [cropSeasonId], references: [id], onDelete: Cascade)
   harvest    Harvest?   @relation(fields: [harvestId], references: [id])
+
+  @@index([archivedAt])
 }
 
 model Worker {

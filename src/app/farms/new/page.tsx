@@ -13,10 +13,10 @@ export default function NewFarmPage() {
             Back to farms
           </Link>
           <h1 className="mt-2 text-2xl font-semibold text-slate-900">New Farm</h1>
-          <p className="text-sm text-slate-600">Create a detailed farm profile and optionally add its first land block.</p>
+          <p className="text-sm text-slate-600">Add the farm basics, draw its boundary, and include optional details when needed.</p>
         </div>
 
-        <FarmForm action={createFarmAction} showInitialBlockFields submitLabel="Create farm" />
+        <FarmForm action={createFarmAction} submitLabel="Create farm" />
       </main>
     </AppShell>
   );

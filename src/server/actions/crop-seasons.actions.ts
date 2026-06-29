@@ -33,7 +33,7 @@ function formValue(formData: FormData, key: string) {
   return typeof value === "string" ? value : "";
 }
 
-async function assertBlockAccess(blockId: string, action: "create" | "edit") {
+async function assertBlockAccess(blockId: string, action: "create" | "edit" | "delete") {
   const user = await getSessionUser();
   const sessionUser = getAuthenticatedSessionUser(await auth());
   if (!user?.role) {
@@ -134,4 +134,34 @@ export async function updateCropSeasonAction(id: string, _previousState: ActionS
   revalidatePath("/crop-seasons");
   revalidatePath(`/crop-seasons/${id}`);
   redirect(`/crop-seasons/${id}`);
+}
+
+export async function archiveCropSeasonAction(id: string): Promise<ActionState> {
+  try {
+    const season = await prisma.cropSeason.findUnique({
+      where: { id },
+      select: { blockId: true }
+    });
+
+    if (!season) {
+      throw new Error("Crop season was not found.");
+    }
+
+    await assertBlockAccess(season.blockId, "delete");
+    await prisma.cropSeason.update({
+      where: { id },
+      data: { archivedAt: new Date() }
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Crop season could not be archived."
+    };
+  }
+
+  revalidatePath("/crop-seasons");
+  revalidatePath("/harvest-sales");
+  revalidatePath("/dashboard");
+  revalidatePath("/reports");
+  return { ok: true, message: "Crop season archived." };
 }

@@ -68,8 +68,9 @@ export async function getDailyReportById(id: string, context: DailyReportAccessC
 
 export async function getAccessibleCropSeasonsForReports(context: DailyReportAccessContext) {
   return prisma.cropSeason.findMany({
-    where:
-      canAccessAllFarms(context.role)
+    where: {
+      archivedAt: null,
+      ...(canAccessAllFarms(context.role)
         ? {}
         : {
             block: {
@@ -77,7 +78,8 @@ export async function getAccessibleCropSeasonsForReports(context: DailyReportAcc
                 in: context.assignedFarmIds
               }
             }
-          },
+          })
+    },
     include: {
       block: {
         include: {

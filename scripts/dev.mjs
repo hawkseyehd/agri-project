@@ -1,5 +1,7 @@
 import { spawn } from "node:child_process";
 
+import { getNextInvocation } from "./dev-command.mjs";
+
 const args = process.argv.slice(2);
 
 function readPort(argv) {
@@ -20,9 +22,9 @@ function readPort(argv) {
 
 const port = readPort(args);
 const origin = `http://localhost:${port}`;
-const nextCommand = process.platform === "win32" ? "next.cmd" : "next";
+const nextInvocation = getNextInvocation(["dev", ...args]);
 
-const child = spawn(nextCommand, ["dev", ...args], {
+const child = spawn(nextInvocation.command, nextInvocation.args, {
   cwd: process.cwd(),
   env: {
     ...process.env,

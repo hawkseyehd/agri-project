@@ -55,7 +55,10 @@ export function calculateSaleAmounts(input: { quantity: number; unitPrice: numbe
 export async function getHarvestSales(context: HarvestSalesAccessContext) {
   const [harvests, sales] = await Promise.all([
     prisma.harvest.findMany({
-      where: cropSeasonAccessFilter(context),
+      where: {
+        archivedAt: null,
+        ...cropSeasonAccessFilter(context)
+      },
       include: {
         cropSeason: {
           include: {
@@ -72,7 +75,10 @@ export async function getHarvestSales(context: HarvestSalesAccessContext) {
       }
     }),
     prisma.sale.findMany({
-      where: cropSeasonAccessFilter(context),
+      where: {
+        archivedAt: null,
+        ...cropSeasonAccessFilter(context)
+      },
       include: {
         cropSeason: {
           include: {

@@ -7,6 +7,12 @@ import Credentials from "next-auth/providers/credentials";
 
 import { prisma } from "@/server/db/prisma";
 
+const authRefreshIntervalMs = 60_000;
+
+export function shouldRefreshAuthToken(lastRefreshedAt: number | undefined, now = Date.now()) {
+  return lastRefreshedAt === undefined || now - lastRefreshedAt >= authRefreshIntervalMs;
+}
+
 export type AuthenticatedUser = {
   id: string;
   name?: string | null;
@@ -102,9 +108,10 @@ export const authOptions: NextAuthOptions = {
         token.subscriptionExpiresAt = user.subscriptionExpiresAt ? user.subscriptionExpiresAt.toISOString() : null;
         token.pagePermissions = user.pagePermissions;
         token.assignedFarmIds = user.assignedFarmIds;
+        token.userRefreshedAt = Date.now();
       }
 
-      if (!user && token.id) {
+      if (!user && token.id && shouldRefreshAuthToken(token.userRefreshedAt)) {
         const currentUser = await prisma.user.findUnique({
           where: {
             id: token.id
@@ -131,6 +138,8 @@ export const authOptions: NextAuthOptions = {
           }));
           token.assignedFarmIds = currentUser.assignments.map((assignment) => assignment.farmId);
         }
+
+        token.userRefreshedAt = Date.now();
       }
 
       return token;

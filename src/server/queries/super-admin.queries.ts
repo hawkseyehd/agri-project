@@ -63,6 +63,7 @@ export async function getSuperAdminDashboardData(range: SuperAdminDateRange = {}
     }),
     prisma.cropSeason.count({
       where: {
+        archivedAt: null,
         ...(createdAt ? { createdAt } : {})
       }
     }),
@@ -98,6 +99,7 @@ export async function getSuperAdminDashboardData(range: SuperAdminDateRange = {}
     }),
     prisma.harvest.count({
       where: {
+        archivedAt: null,
         ...(dateWhere(range) ? { harvestDate: dateWhere(range) } : {})
       }
     }),
@@ -108,6 +110,7 @@ export async function getSuperAdminDashboardData(range: SuperAdminDateRange = {}
     }),
     prisma.sale.count({
       where: {
+        archivedAt: null,
         ...(dateWhere(range) ? { saleDate: dateWhere(range) } : {})
       }
     })

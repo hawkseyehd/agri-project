@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { Wheat } from "lucide-react";
 
 import { AppShell } from "@/components/layout/AppShell";
+import { ArchiveActionButton } from "@/components/ui/ArchiveActionButton";
 import { DataTable, PageHeader, Panel, StatCard, StatusBadge } from "@/components/ui/dashboard";
+import { archiveCropSeasonAction } from "@/server/actions/crop-seasons.actions";
 import { auth } from "@/server/auth/auth";
+import { canUsePagePermission } from "@/server/auth/permissions";
 import { getCropSeasons, type AccessContext } from "@/server/queries/crop-seasons.queries";
 import {
   filterCropSeasonSummaries,
@@ -63,6 +67,7 @@ export default async function Page({ searchParams }: PageProps) {
   const seasons = await getCropSeasons(access);
   const visibleSeasons = filterCropSeasonSummaries(seasons, { query, status });
   const summary = getCropSeasonListSummary(visibleSeasons);
+  const canArchive = Boolean(session?.user && canUsePagePermission(session.user.role, session.user.pagePermissions ?? [], "CROP_SEASONS", "delete"));
 
   return (
     <AppShell>
@@ -105,7 +110,7 @@ export default async function Page({ searchParams }: PageProps) {
         </Panel>
         <Panel title="Crop Seasons">
           <DataTable
-            columns={["Crop", "Type", "Farm / Block", "Stage", "Start", "Harvest", "Actual Yield", "Expenses"]}
+            columns={["Crop", "Type", "Farm / Block", "Stage", "Start", "Harvest", "Actual Yield", "Expenses", "Actions"]}
             rows={visibleSeasons.map((season) => {
               const actualYield = season.harvests.reduce((total, harvest) => total + Number(harvest.quantity), 0);
               const expenses = season.expenses.reduce((total, expense) => total + Number(expense.amount), 0);
@@ -121,7 +126,22 @@ export default async function Page({ searchParams }: PageProps) {
                 dateLabel(season.startDate),
                 season.cropType === "TREE" ? season.harvestTiming ?? "Not set" : dateLabel(season.endDate),
                 numberLabel(actualYield),
-                `PKR ${numberLabel(expenses)}`
+                `PKR ${numberLabel(expenses)}`,
+                <div key={`${season.id}-actions`} className="flex items-center gap-2">
+                  <Link
+                    href={`/harvest-sales?cropSeasonId=${season.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-100"
+                  >
+                    <Wheat className="h-3.5 w-3.5" />
+                    Harvest
+                  </Link>
+                  {canArchive ? (
+                    <ArchiveActionButton
+                      action={archiveCropSeasonAction.bind(null, season.id)}
+                      description="This hides the crop season from active lists and entry selectors. Historical harvest, sale, report, and expense records remain stored."
+                    />
+                  ) : null}
+                </div>
               ];
             })}
           />

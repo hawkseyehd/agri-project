@@ -71,7 +71,10 @@ export async function getReportsPageData(context: ReportsAccessContext, filters:
       }
     }),
     prisma.cropSeason.findMany({
-      where: cropSeasonAccessFilter(context, filters),
+      where: {
+        archivedAt: null,
+        ...cropSeasonAccessFilter(context, filters)
+      },
       include: {
         block: {
           include: {
@@ -79,8 +82,12 @@ export async function getReportsPageData(context: ReportsAccessContext, filters:
           }
         },
         expenses: true,
-        sales: true,
-        harvests: true
+        sales: {
+          where: { archivedAt: null }
+        },
+        harvests: {
+          where: { archivedAt: null }
+        }
       },
       orderBy: [{ startDate: "desc" }, { cropName: "asc" }]
     })

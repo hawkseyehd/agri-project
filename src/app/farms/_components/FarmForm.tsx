@@ -16,7 +16,6 @@ type FarmDefaultValues = Partial<Record<string, string | number | null>>;
 type FarmFormProps = {
   action: (state: ActionState, formData: FormData) => Promise<ActionState>;
   defaultValues?: FarmDefaultValues;
-  showInitialBlockFields?: boolean;
   submitLabel: string;
 };
 
@@ -96,7 +95,7 @@ function FarmTypeSelect({ state, defaultValues }: { state: ActionState; defaultV
   );
 }
 
-export function FarmForm({ action, defaultValues, showInitialBlockFields = false, submitLabel }: FarmFormProps) {
+export function FarmForm({ action, defaultValues, submitLabel }: FarmFormProps) {
   const [state, formAction] = useFormState(action, { ok: false });
 
   return (
@@ -119,96 +118,75 @@ export function FarmForm({ action, defaultValues, showInitialBlockFields = false
 
       <BoundaryDrawMap fieldName="boundaryGeoJson" areaFieldId="area" defaultBoundary={defaultValue(defaultValues, "boundaryGeoJson")} />
 
-      <Section title="Place and land records">
-        <div className="grid gap-4 md:grid-cols-2">
-          <TextInput state={state} name="village" label="Village or town" defaultValues={defaultValues} />
-          <TextInput state={state} name="city" label="City" defaultValues={defaultValues} />
-          <TextInput state={state} name="district" label="District" defaultValues={defaultValues} />
-          <TextInput state={state} name="region" label="Region or province" defaultValues={defaultValues} />
-          <TextInput state={state} name="country" label="Country" defaultValues={defaultValues} />
-          <TextInput state={state} name="gpsCoordinates" label="GPS coordinates" defaultValues={defaultValues} />
-          <TextInput state={state} name="registrationNumber" label="Registration number" defaultValues={defaultValues} />
-          <TextInput state={state} name="landRecordNumber" label="Land record number" defaultValues={defaultValues} />
-          <TextInput state={state} name="leaseStartDate" label="Lease start date" defaultValues={defaultValues} type="date" />
-          <TextInput state={state} name="leaseEndDate" label="Lease end date" defaultValues={defaultValues} type="date" />
-          <TextInput state={state} name="contactPerson" label="Main contact person" defaultValues={defaultValues} />
-          <TextInput state={state} name="contactPhone" label="Contact phone" defaultValues={defaultValues} />
-        </div>
-        <TextArea state={state} name="description" label="Farm description" defaultValues={defaultValues} />
-      </Section>
+      <details className="rounded-md border border-slate-200 bg-slate-50/60">
+        <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50">
+          Add advanced information
+        </summary>
+        <div className="space-y-5 border-t border-slate-200 bg-white px-4 pb-5">
+          <Section title="Place and land records">
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextInput state={state} name="village" label="Village or town" defaultValues={defaultValues} />
+              <TextInput state={state} name="city" label="City" defaultValues={defaultValues} />
+              <TextInput state={state} name="district" label="District" defaultValues={defaultValues} />
+              <TextInput state={state} name="region" label="Region or province" defaultValues={defaultValues} />
+              <TextInput state={state} name="country" label="Country" defaultValues={defaultValues} />
+              <TextInput state={state} name="gpsCoordinates" label="GPS coordinates" defaultValues={defaultValues} />
+              <TextInput state={state} name="registrationNumber" label="Registration number" defaultValues={defaultValues} />
+              <TextInput state={state} name="landRecordNumber" label="Land record number" defaultValues={defaultValues} />
+              <TextInput state={state} name="leaseStartDate" label="Lease start date" defaultValues={defaultValues} type="date" />
+              <TextInput state={state} name="leaseEndDate" label="Lease end date" defaultValues={defaultValues} type="date" />
+              <TextInput state={state} name="contactPerson" label="Main contact person" defaultValues={defaultValues} />
+              <TextInput state={state} name="contactPhone" label="Contact phone" defaultValues={defaultValues} />
+            </div>
+            <TextArea state={state} name="description" label="Farm description" defaultValues={defaultValues} />
+          </Section>
 
-      <Section title="Soil and water">
-        <div className="grid gap-4 md:grid-cols-2">
-          <TextInput state={state} name="soilType" label="Soil type" defaultValues={defaultValues} />
-          <TextInput state={state} name="soilPh" label="Soil pH" defaultValues={defaultValues} type="number" />
-          <TextInput state={state} name="organicMatterLevel" label="Organic matter level" defaultValues={defaultValues} />
-          <TextInput state={state} name="salinityIssue" label="Salinity issue" defaultValues={defaultValues} />
-          <TextInput state={state} name="lastSoilTestDate" label="Last soil test date" defaultValues={defaultValues} type="date" />
-          <TextInput state={state} name="irrigationMethod" label="Irrigation method" defaultValues={defaultValues} />
-          <TextInput state={state} name="waterSource" label="Water source" defaultValues={defaultValues} />
-          <TextInput state={state} name="waterSourcesCount" label="Water sources count" defaultValues={defaultValues} type="number" />
-          <TextInput state={state} name="pumpType" label="Pump type or capacity" defaultValues={defaultValues} />
-          <TextInput state={state} name="waterAvailability" label="Water availability" defaultValues={defaultValues} />
-          <TextInput state={state} name="irrigationEnergySource" label="Irrigation energy source" defaultValues={defaultValues} />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <TextArea state={state} name="fertilityNotes" label="Fertility notes" defaultValues={defaultValues} />
-          <TextArea state={state} name="knownProblems" label="Known land problems" defaultValues={defaultValues} />
-          <TextArea state={state} name="waterScheduleNotes" label="Water schedule notes" defaultValues={defaultValues} />
-        </div>
-      </Section>
+          <Section title="Soil and water">
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextInput state={state} name="soilType" label="Soil type" defaultValues={defaultValues} />
+              <TextInput state={state} name="soilPh" label="Soil pH" defaultValues={defaultValues} type="number" />
+              <TextInput state={state} name="organicMatterLevel" label="Organic matter level" defaultValues={defaultValues} />
+              <TextInput state={state} name="salinityIssue" label="Salinity issue" defaultValues={defaultValues} />
+              <TextInput state={state} name="lastSoilTestDate" label="Last soil test date" defaultValues={defaultValues} type="date" />
+              <TextInput state={state} name="irrigationMethod" label="Irrigation method" defaultValues={defaultValues} />
+              <TextInput state={state} name="waterSource" label="Water source" defaultValues={defaultValues} />
+              <TextInput state={state} name="waterSourcesCount" label="Water sources count" defaultValues={defaultValues} type="number" />
+              <TextInput state={state} name="pumpType" label="Pump type or capacity" defaultValues={defaultValues} />
+              <TextInput state={state} name="waterAvailability" label="Water availability" defaultValues={defaultValues} />
+              <TextInput state={state} name="irrigationEnergySource" label="Irrigation energy source" defaultValues={defaultValues} />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextArea state={state} name="fertilityNotes" label="Fertility notes" defaultValues={defaultValues} />
+              <TextArea state={state} name="knownProblems" label="Known land problems" defaultValues={defaultValues} />
+              <TextArea state={state} name="waterScheduleNotes" label="Water schedule notes" defaultValues={defaultValues} />
+            </div>
+          </Section>
 
-      <Section title="Labor, inventory, and finance">
-        <div className="grid gap-4 md:grid-cols-2">
-          <TextInput state={state} name="permanentWorkersCount" label="Permanent workers count" defaultValues={defaultValues} type="number" />
-          <TextInput state={state} name="seasonalWorkersCount" label="Seasonal workers count" defaultValues={defaultValues} type="number" />
-          <TextInput state={state} name="defaultDailyWage" label="Default daily wage" defaultValues={defaultValues} type="number" />
-          <TextInput state={state} name="openingBalance" label="Opening balance" defaultValues={defaultValues} type="number" />
-          <TextInput state={state} name="currency" label="Currency" defaultValues={defaultValues} />
-          <TextInput state={state} name="seasonalBudget" label="Seasonal budget" defaultValues={defaultValues} type="number" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2">
-          <TextArea state={state} name="inventoryNotes" label="Starting inventory notes" defaultValues={defaultValues} />
-          <TextArea state={state} name="equipmentNotes" label="Equipment and machinery notes" defaultValues={defaultValues} />
-          <TextArea state={state} name="expenseCategories" label="Expense categories" defaultValues={defaultValues} />
-        </div>
-      </Section>
+          <Section title="Labor, inventory, and finance">
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextInput state={state} name="permanentWorkersCount" label="Permanent workers count" defaultValues={defaultValues} type="number" />
+              <TextInput state={state} name="seasonalWorkersCount" label="Seasonal workers count" defaultValues={defaultValues} type="number" />
+              <TextInput state={state} name="defaultDailyWage" label="Default daily wage" defaultValues={defaultValues} type="number" />
+              <TextInput state={state} name="openingBalance" label="Opening balance" defaultValues={defaultValues} type="number" />
+              <TextInput state={state} name="currency" label="Currency" defaultValues={defaultValues} />
+              <TextInput state={state} name="seasonalBudget" label="Seasonal budget" defaultValues={defaultValues} type="number" />
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextArea state={state} name="inventoryNotes" label="Starting inventory notes" defaultValues={defaultValues} />
+              <TextArea state={state} name="equipmentNotes" label="Equipment and machinery notes" defaultValues={defaultValues} />
+              <TextArea state={state} name="expenseCategories" label="Expense categories" defaultValues={defaultValues} />
+            </div>
+          </Section>
 
-      <Section title="Documents, alerts, and management">
-        <div className="grid gap-4 md:grid-cols-2">
-          <TextArea state={state} name="documentsNotes" label="Document notes" defaultValues={defaultValues} />
-          <TextArea state={state} name="alertsNotes" label="Alert preferences" defaultValues={defaultValues} />
-          <TextArea state={state} name="managerNotes" label="Manager notes" defaultValues={defaultValues} />
+          <Section title="Documents, alerts, and management">
+            <div className="grid gap-4 md:grid-cols-2">
+              <TextArea state={state} name="documentsNotes" label="Document notes" defaultValues={defaultValues} />
+              <TextArea state={state} name="alertsNotes" label="Alert preferences" defaultValues={defaultValues} />
+              <TextArea state={state} name="managerNotes" label="Manager notes" defaultValues={defaultValues} />
+            </div>
+          </Section>
         </div>
-      </Section>
-
-      {showInitialBlockFields ? (
-        <Section title="First land block">
-          <div className="grid gap-4 md:grid-cols-2">
-            <label className="space-y-1 text-sm font-medium text-slate-700">
-              Block name
-              <input name="initialBlockName" className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm" />
-              {fieldError(state, "initialBlockName") ? <span className="block text-xs text-red-600">{fieldError(state, "initialBlockName")}</span> : null}
-            </label>
-
-            <label className="space-y-1 text-sm font-medium text-slate-700">
-              Block area acres
-              <input
-                id="initialBlockAreaAcres"
-                type="number"
-                step="0.01"
-                min="0"
-                name="initialBlockAreaAcres"
-                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm"
-              />
-              {fieldError(state, "initialBlockAreaAcres") ? (
-                <span className="block text-xs text-red-600">{fieldError(state, "initialBlockAreaAcres")}</span>
-              ) : null}
-            </label>
-          </div>
-          <BoundaryDrawMap fieldName="initialBlockBoundaryGeoJson" areaFieldId="initialBlockAreaAcres" />
-        </Section>
-      ) : null}
+      </details>
 
       <div className="flex justify-end">
         <SubmitButton label={submitLabel} />

@@ -7,9 +7,9 @@ import { auth, getSessionUser as getAuthenticatedSessionUser } from "@/server/au
 import { assertCanUsePageAction } from "@/server/auth/page-permissions";
 import { canAccessFarm } from "@/server/auth/permissions";
 import { prisma } from "@/server/db/prisma";
-import { harvestSchema } from "@/server/validators/harvest.schema";
+import { harvestEntrySchema, harvestSchema } from "@/server/validators/harvest.schema";
 
-type ActionState = {
+export type HarvestActionState = {
   ok: boolean;
   message?: string;
   errors?: Record<string, string[]>;
@@ -31,7 +31,7 @@ function formValue(formData: FormData, key: string) {
   return typeof value === "string" ? value : "";
 }
 
-async function assertCropSeasonAccess(cropSeasonId: string, action: "create" | "edit") {
+async function assertCropSeasonAccess(cropSeasonId: string, action: "create" | "edit" | "delete") {
   const user = await getSessionUser();
   const sessionUser = getAuthenticatedSessionUser(await auth());
 
@@ -46,6 +46,8 @@ async function assertCropSeasonAccess(cropSeasonId: string, action: "create" | "
     select: {
       id: true,
       cropName: true,
+      endDate: true,
+      archivedAt: true,
       block: {
         select: {
           id: true,
@@ -70,6 +72,10 @@ async function assertCropSeasonAccess(cropSeasonId: string, action: "create" | "
     throw new Error("Selected crop season was not found.");
   }
 
+  if (season.archivedAt) {
+    throw new Error("Selected crop season is archived.");
+  }
+
   if (!canAccessFarm(user.role, user.assignedFarmIds ?? [], season.block.farmId)) {
     throw new Error("You do not have access to this crop season.");
   }
@@ -81,25 +87,37 @@ async function assertCropSeasonAccess(cropSeasonId: string, action: "create" | "
   return season;
 }
 
-export async function createHarvestAction(_previousState: ActionState, formData: FormData): Promise<ActionState> {
-  const parsed = harvestSchema.safeParse({
+export async function createHarvestAction(_previousState: HarvestActionState, formData: FormData): Promise<HarvestActionState> {
+  const parsed = harvestEntrySchema.safeParse({
     cropSeasonId: formValue(formData, "cropSeasonId"),
     quantity: formValue(formData, "quantity"),
     unit: formValue(formData, "unit"),
     harvestDate: formValue(formData, "harvestDate"),
-    notes: formValue(formData, "notes")
+    notes: formValue(formData, "notes"),
+    includeSale: formValue(formData, "includeSale") === "true" ? "true" : "false",
+    allowEarlyHarvest: formValue(formData, "allowEarlyHarvest") === "true" ? "true" : "false",
+    buyerName: formValue(formData, "buyerName"),
+    saleDate: formValue(formData, "saleDate"),
+    saleQuantity: formValue(formData, "saleQuantity"),
+    unitPrice: formValue(formData, "unitPrice"),
+    received: formValue(formData, "received") || "0"
   });
 
   if (!parsed.success) {
     return {
       ok: false,
-      message: "Please fix the highlighted harvest fields.",
+      message: "Please fix the highlighted fields.",
       errors: parsed.error.flatten().fieldErrors
     };
   }
 
   try {
     const season = await assertCropSeasonAccess(parsed.data.cropSeasonId, "create");
+    const harvestDate = new Date(parsed.data.harvestDate);
+
+    if (season.endDate && harvestDate < season.endDate && parsed.data.allowEarlyHarvest !== "true") {
+      throw new Error("Harvest date is before the expected harvest date. Confirm early harvest to continue.");
+    }
 
     await prisma.$transaction(async (tx) => {
       const harvest = await tx.harvest.create({
@@ -107,7 +125,7 @@ export async function createHarvestAction(_previousState: ActionState, formData:
           cropSeasonId: parsed.data.cropSeasonId,
           quantity: parsed.data.quantity,
           unit: parsed.data.unit,
-          harvestDate: new Date(parsed.data.harvestDate),
+          harvestDate,
           notes: parsed.data.notes
         }
       });
@@ -122,7 +140,7 @@ export async function createHarvestAction(_previousState: ActionState, formData:
           cropName: season.cropName,
           quantity: parsed.data.quantity,
           unit: parsed.data.unit,
-          yieldDate: new Date(parsed.data.harvestDate),
+          yieldDate: harvestDate,
           farmName: season.block.farm.name,
           city: season.block.farm.city,
           district: season.block.farm.district,
@@ -131,6 +149,20 @@ export async function createHarvestAction(_previousState: ActionState, formData:
           notes: parsed.data.notes
         }
       });
+
+      if (parsed.data.includeSale === "true") {
+        await tx.sale.create({
+          data: {
+            cropSeasonId: parsed.data.cropSeasonId,
+            harvestId: harvest.id,
+            buyerName: parsed.data.buyerName,
+            quantity: parsed.data.saleQuantity,
+            unitPrice: parsed.data.unitPrice,
+            saleDate: new Date(parsed.data.saleDate),
+            received: parsed.data.received
+          }
+        });
+      }
     });
 
     revalidatePath("/harvest-sales");
@@ -138,9 +170,13 @@ export async function createHarvestAction(_previousState: ActionState, formData:
     revalidatePath("/super-admin/yields");
     revalidatePath("/dashboard");
 
+    if (parsed.data.includeSale === "true") {
+      revalidatePath("/reports");
+    }
+
     return {
       ok: true,
-      message: "Harvest recorded."
+      message: parsed.data.includeSale === "true" ? "Harvest and sale recorded." : "Harvest recorded."
     };
   } catch (error) {
     return {
@@ -150,7 +186,7 @@ export async function createHarvestAction(_previousState: ActionState, formData:
   }
 }
 
-export async function updateHarvestAction(id: string, _previousState: ActionState, formData: FormData): Promise<ActionState> {
+export async function updateHarvestAction(id: string, _previousState: HarvestActionState, formData: FormData): Promise<HarvestActionState> {
   const parsed = harvestSchema.safeParse({
     cropSeasonId: formValue(formData, "cropSeasonId"),
     quantity: formValue(formData, "quantity"),
@@ -239,4 +275,34 @@ export async function updateHarvestAction(id: string, _previousState: ActionStat
       message: error instanceof Error ? error.message : "Harvest could not be updated."
     };
   }
+}
+
+export async function archiveHarvestAction(id: string): Promise<HarvestActionState> {
+  try {
+    const harvest = await prisma.harvest.findUnique({
+      where: { id },
+      select: { cropSeasonId: true }
+    });
+
+    if (!harvest) {
+      throw new Error("Harvest was not found.");
+    }
+
+    await assertCropSeasonAccess(harvest.cropSeasonId, "delete");
+    await prisma.harvest.update({
+      where: { id },
+      data: { archivedAt: new Date() }
+    });
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Harvest could not be archived."
+    };
+  }
+
+  revalidatePath("/harvest-sales");
+  revalidatePath("/crop-seasons");
+  revalidatePath("/dashboard");
+  revalidatePath("/reports");
+  return { ok: true, message: "Harvest archived." };
 }

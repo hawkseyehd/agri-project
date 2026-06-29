@@ -38,7 +38,6 @@ const navigation = [
   { href: "/expenses", label: "Expenses", icon: Coins, page: "EXPENSES" },
   { href: "/inventory", label: "Inventory", icon: Boxes, page: "INVENTORY" },
   { href: "/harvest-sales", label: "Harvest & Sales", icon: TrendingUp, page: "HARVEST_SALES" },
-  { href: "/yields", label: "Yields", icon: BarChart3, page: "YIELDS" },
   { href: "/reports", label: "Reports", icon: Leaf, page: "REPORTS" },
   { href: "/notifications", label: "Notifications", icon: BellRing },
   { href: "/activity-logs", label: "Activity Logs", icon: ScrollText }
