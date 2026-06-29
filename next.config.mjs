@@ -6,7 +6,6 @@ const nextConfig = {
         ".pnpm-store/**",
         "node_modules/.pnpm/@playwright+test*/**",
         "node_modules/.pnpm/playwright*/**",
-        "node_modules/.pnpm/next*playwright*/**",
         "Plan/**",
         "docs/**",
         ".git/**",
